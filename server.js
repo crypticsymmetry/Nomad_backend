@@ -1,7 +1,7 @@
 const express = require('express');
-const path = require('path');
 const multer = require('multer');
 const { db, setupDatabase } = require('./db');
+const path = require('path');
 const fs = require('fs');
 
 const app = express();
@@ -14,15 +14,13 @@ app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, 'client/build')));
+app.use(express.static(path.join(__dirname, 'frontend/build')));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
 });
 
-// API routes go here
-
-// Add machine
+// API routes
 app.post('/machines', (req, res) => {
     const { name } = req.body;
     db.run(`INSERT INTO machines (name, status) VALUES (?, 'Pending')`, [name], function(err) {
@@ -34,7 +32,6 @@ app.post('/machines', (req, res) => {
     });
 });
 
-// Remove machine
 app.delete('/machines/:id', (req, res) => {
     const { id } = req.params;
     db.run(`DELETE FROM machines WHERE id = ?`, [id], function(err) {
@@ -46,7 +43,6 @@ app.delete('/machines/:id', (req, res) => {
     });
 });
 
-// Upload machine photo
 app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
     const { id } = req.params;
     const photoPath = req.file.path;
@@ -59,7 +55,6 @@ app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
     });
 });
 
-// Start timer
 app.post('/machines/:id/start', (req, res) => {
     const { id } = req.params;
     const startTime = new Date().toISOString();
@@ -72,7 +67,6 @@ app.post('/machines/:id/start', (req, res) => {
     });
 });
 
-// Pause timer
 app.post('/machines/:id/pause', (req, res) => {
     const { id } = req.params;
     db.get(`SELECT start_time, total_time FROM machines WHERE id = ?`, [id], (err, row) => {
@@ -93,7 +87,6 @@ app.post('/machines/:id/pause', (req, res) => {
     });
 });
 
-// Stop timer
 app.post('/machines/:id/stop', (req, res) => {
     const { id } = req.params;
     db.get(`SELECT start_time, total_time FROM machines WHERE id = ?`, [id], (err, row) => {
@@ -114,7 +107,6 @@ app.post('/machines/:id/stop', (req, res) => {
     });
 });
 
-// Update status
 app.put('/machines/:id/status', (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -127,7 +119,6 @@ app.put('/machines/:id/status', (req, res) => {
     });
 });
 
-// Get all machines
 app.get('/machines', (req, res) => {
     db.all(`SELECT * FROM machines`, (err, rows) => {
         if (err) {
@@ -141,7 +132,6 @@ app.get('/machines', (req, res) => {
     });
 });
 
-// Get machine by id
 app.get('/machines/:id', (req, res) => {
     const { id } = req.params;
     db.get(`SELECT * FROM machines WHERE id = ?`, [id], (err, row) => {
@@ -163,7 +153,6 @@ app.get('/machines/:id', (req, res) => {
     });
 });
 
-// Add issue
 app.post('/machines/:id/issues', (req, res) => {
     const { id } = req.params;
     const { issue, note, severity } = req.body;
@@ -182,7 +171,6 @@ app.post('/machines/:id/issues', (req, res) => {
     });
 });
 
-// Remove issue
 app.delete('/machines/:machineId/issues/:issueId', (req, res) => {
     const { machineId, issueId } = req.params;
     db.run(`DELETE FROM issues WHERE id = ?`, [issueId], function(err) {
@@ -200,7 +188,6 @@ app.delete('/machines/:machineId/issues/:issueId', (req, res) => {
     });
 });
 
-// Update issue note
 app.put('/machines/:machineId/issues/:issueId/note', (req, res) => {
     const { machineId, issueId } = req.params;
     const { note } = req.body;
@@ -219,7 +206,6 @@ app.put('/machines/:machineId/issues/:issueId/note', (req, res) => {
     });
 });
 
-// Update issue severity
 app.put('/machines/:machineId/issues/:issueId/severity', (req, res) => {
     const { machineId, issueId } = req.params;
     const { severity } = req.body;
@@ -238,9 +224,8 @@ app.put('/machines/:machineId/issues/:issueId/severity', (req, res) => {
     });
 });
 
-// Serve issues_file.json
 app.get('/issues-file', (req, res) => {
-    const issuesFilePath = path.join(__dirname, 'issues_file.json');
+    const issuesFilePath = path.join(__dirname, 'data', 'issues_file.json');
     fs.readFile(issuesFilePath, 'utf8', (err, data) => {
         if (err) {
             console.error('Error reading issues file:', err.message);
@@ -253,7 +238,7 @@ app.get('/issues-file', (req, res) => {
 
 // All remaining requests return the React app, so it can handle routing
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
 });
 
 function secondsToHMS(seconds) {
