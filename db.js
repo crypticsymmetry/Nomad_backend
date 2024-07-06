@@ -1,7 +1,22 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-const db = new sqlite3.Database(path.join('/var/data', 'powersports.db'));
+const databaseDirectory = path.join(__dirname, 'data');
+const databasePath = path.join(databaseDirectory, 'powersports.db');
+
+// Ensure the database directory exists
+if (!fs.existsSync(databaseDirectory)) {
+    fs.mkdirSync(databaseDirectory, { recursive: true });
+}
+
+const db = new sqlite3.Database(databasePath, (err) => {
+    if (err) {
+        console.error('Error opening database:', err.message);
+    } else {
+        console.log('Database connected.');
+    }
+});
 
 function setupDatabase() {
     db.serialize(() => {
