@@ -38,8 +38,8 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Add machine
 app.post('/machines', (req, res) => {
-    const { name } = req.body;
-    db.run(`INSERT INTO machines (name, status) VALUES (?, 'Pending')`, [name], function (err) {
+    const { name, worker_name } = req.body; // Include worker_name
+    db.run(`INSERT INTO machines (name, status, worker_name) VALUES (?, 'Pending', ?)`, [name, worker_name], function (err) {
         if (err) {
             console.error('Error adding machine:', err.message);
             return res.status(500).send(err.message);
