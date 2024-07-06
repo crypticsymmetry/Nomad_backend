@@ -1,7 +1,16 @@
 const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 const path = require('path');
 
-const db = new sqlite3.Database(path.join('/var/data', 'powersports.db'));
+// Ensure the directory for the database exists
+const dbDirectory = '/var/data';
+const dbPath = path.join(dbDirectory, 'powersports.db');
+
+if (!fs.existsSync(dbDirectory)) {
+    fs.mkdirSync(dbDirectory, { recursive: true });
+}
+
+const db = new sqlite3.Database(dbPath);
 
 function setupDatabase() {
     db.serialize(() => {
