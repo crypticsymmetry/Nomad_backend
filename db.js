@@ -10,7 +10,8 @@ function setupDatabase() {
             status TEXT NOT NULL,
             start_time TEXT,
             total_time INTEGER DEFAULT 0,
-            photo TEXT
+            photo TEXT,
+            worker_name TEXT // Add this line
         )`);
 
         db.run(`CREATE TABLE IF NOT EXISTS issues (
