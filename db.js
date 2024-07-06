@@ -1,22 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
-const fs = require('fs');
-const path = require('path');
 
-// Use a different directory for Render, or default to the local directory
-const dbDirectory = process.env.DB_DIRECTORY || './data';
-const dbPath = path.join(dbDirectory, 'powersports.db');
-
-// Ensure the directory for the database exists
-if (!fs.existsSync(dbDirectory)) {
-    try {
-        fs.mkdirSync(dbDirectory, { recursive: true });
-    } catch (err) {
-        console.error(`Error creating directory ${dbDirectory}:`, err.message);
-        process.exit(1);
-    }
-}
-
-const db = new sqlite3.Database(dbPath);
+const db = new sqlite3.Database(':memory:');
 
 function setupDatabase() {
     db.serialize(() => {
