@@ -11,7 +11,7 @@ const upload = multer({ dest: 'images/' });
 
 // Setup CORS to allow requests from your frontend URL
 const corsOptions = {
-    origin: 'https://nomad-frontend-silk.vercel.app/', // Replace with your Vercel frontend URL
+    origin: 'https://nomad-frontend-silk.vercel.app/*', // Replace with your Vercel frontend URL
     optionsSuccessStatus: 200
 };
 
