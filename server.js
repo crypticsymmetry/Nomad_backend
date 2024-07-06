@@ -1,7 +1,7 @@
 const express = require('express');
+const path = require('path');
 const multer = require('multer');
 const { db, setupDatabase } = require('./db');
-const path = require('path');
 const fs = require('fs');
 
 const app = express();
@@ -12,6 +12,15 @@ setupDatabase();
 
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
+// API routes go here
 
 // Add machine
 app.post('/machines', (req, res) => {
@@ -240,6 +249,11 @@ app.get('/issues-file', (req, res) => {
             res.json(JSON.parse(data));
         }
     });
+});
+
+// All remaining requests return the React app, so it can handle routing
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
 function secondsToHMS(seconds) {
