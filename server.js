@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const multer = require('multer');
 const { db, setupDatabase } = require('./db');
 const path = require('path');
@@ -11,7 +10,6 @@ const upload = multer({ dest: 'images/' });
 
 setupDatabase();
 
-app.use(cors({ origin: 'https://nomad-frontend-miv9tvpmx-crypticsymmetrys-projects.vercel.app/' }));
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
