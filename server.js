@@ -1,15 +1,17 @@
 const express = require('express');
+const cors = require('cors');
 const multer = require('multer');
 const { db, setupDatabase } = require('./db');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const upload = multer({ dest: 'images/' });
 
 setupDatabase();
 
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
