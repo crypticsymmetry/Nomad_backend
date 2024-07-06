@@ -39,7 +39,7 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 // Add machine
 app.post('/machines', (req, res) => {
     const { name } = req.body;
-    db.run(`INSERT INTO machines (name, status) VALUES (?, 'Pending')`, [name], function(err) {
+    db.run(`INSERT INTO machines (name, status) VALUES (?, 'Pending')`, [name], function (err) {
         if (err) {
             console.error('Error adding machine:', err.message);
             return res.status(500).send(err.message);
@@ -51,7 +51,7 @@ app.post('/machines', (req, res) => {
 // Remove machine
 app.delete('/machines/:id', (req, res) => {
     const { id } = req.params;
-    db.run(`DELETE FROM machines WHERE id = ?`, [id], function(err) {
+    db.run(`DELETE FROM machines WHERE id = ?`, [id], function (err) {
         if (err) {
             console.error('Error deleting machine:', err.message);
             return res.status(500).send(err.message);
@@ -64,12 +64,12 @@ app.delete('/machines/:id', (req, res) => {
 app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
     const { id } = req.params;
     const photoPath = req.file.path;
-    db.run(`UPDATE machines SET photo = ? WHERE id = ?`, [photoPath, id], function(err) {
+    db.run(`UPDATE machines SET photo = ? WHERE id = ?`, [photoPath, id], function (err) {
         if (err) {
             console.error('Error uploading photo:', err.message);
             return res.status(500).send(err.message);
         }
-        res.status(200).send('Photo uploaded');
+        res.status(200).send({ photo: photoPath });
     });
 });
 
@@ -77,7 +77,7 @@ app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
 app.post('/machines/:id/start', (req, res) => {
     const { id } = req.params;
     const startTime = new Date().toISOString();
-    db.run(`UPDATE machines SET start_time = ? WHERE id = ?`, [startTime, id], function(err) {
+    db.run(`UPDATE machines SET start_time = ?, status = 'Started' WHERE id = ?`, [startTime, id], function (err) {
         if (err) {
             console.error('Error starting timer:', err.message);
             return res.status(500).send(err.message);
@@ -97,7 +97,7 @@ app.post('/machines/:id/pause', (req, res) => {
         const startTime = new Date(row.start_time);
         const elapsed = (new Date() - startTime) / 1000;
         const newTotalTime = row.total_time + elapsed;
-        db.run(`UPDATE machines SET start_time = NULL, total_time = ? WHERE id = ?`, [newTotalTime, id], function(err) {
+        db.run(`UPDATE machines SET start_time = NULL, total_time = ?, status = 'Paused' WHERE id = ?`, [newTotalTime, id], function (err) {
             if (err) {
                 console.error('Error pausing timer:', err.message);
                 return res.status(500).send(err.message);
@@ -118,7 +118,7 @@ app.post('/machines/:id/stop', (req, res) => {
         const startTime = new Date(row.start_time);
         const elapsed = (new Date() - startTime) / 1000;
         const newTotalTime = row.total_time + elapsed;
-        db.run(`UPDATE machines SET start_time = NULL, total_time = ? WHERE id = ?`, [newTotalTime, id], function(err) {
+        db.run(`UPDATE machines SET start_time = NULL, total_time = ?, status = 'Stopped/Finished' WHERE id = ?`, [newTotalTime, id], function (err) {
             if (err) {
                 console.error('Error stopping timer:', err.message);
                 return res.status(500).send(err.message);
@@ -132,7 +132,7 @@ app.post('/machines/:id/stop', (req, res) => {
 app.put('/machines/:id/status', (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
-    db.run(`UPDATE machines SET status = ? WHERE id = ?`, [status, id], function(err) {
+    db.run(`UPDATE machines SET status = ? WHERE id = ?`, [status, id], function (err) {
         if (err) {
             console.error('Error updating status:', err.message);
             return res.status(500).send(err.message);
@@ -181,7 +181,7 @@ app.get('/machines/:id', (req, res) => {
 app.post('/machines/:id/issues', (req, res) => {
     const { id } = req.params;
     const { issue, note, severity } = req.body;
-    db.run(`INSERT INTO issues (machine_id, issue, status, note, severity) VALUES (?, ?, 'Pending', ?, ?)`, [id, issue, note, severity], function(err) {
+    db.run(`INSERT INTO issues (machine_id, issue, status, note, severity) VALUES (?, ?, 'Pending', ?, ?)`, [id, issue, note, severity], function (err) {
         if (err) {
             console.error('Error adding issue:', err.message);
             return res.status(500).send(err.message);
@@ -199,7 +199,7 @@ app.post('/machines/:id/issues', (req, res) => {
 // Remove issue
 app.delete('/machines/:machineId/issues/:issueId', (req, res) => {
     const { machineId, issueId } = req.params;
-    db.run(`DELETE FROM issues WHERE id = ?`, [issueId], function(err) {
+    db.run(`DELETE FROM issues WHERE id = ?`, [issueId], function (err) {
         if (err) {
             console.error('Error removing issue:', err.message);
             return res.status(500).send(err.message);
@@ -218,7 +218,7 @@ app.delete('/machines/:machineId/issues/:issueId', (req, res) => {
 app.put('/machines/:machineId/issues/:issueId/note', (req, res) => {
     const { machineId, issueId } = req.params;
     const { note } = req.body;
-    db.run(`UPDATE issues SET note = ? WHERE id = ?`, [note, issueId], function(err) {
+    db.run(`UPDATE issues SET note = ? WHERE id = ?`, [note, issueId], function (err) {
         if (err) {
             console.error('Error updating note:', err.message);
             return res.status(500).send(err.message);
@@ -237,7 +237,7 @@ app.put('/machines/:machineId/issues/:issueId/note', (req, res) => {
 app.put('/machines/:machineId/issues/:issueId/severity', (req, res) => {
     const { machineId, issueId } = req.params;
     const { severity } = req.body;
-    db.run(`UPDATE issues SET severity = ? WHERE id = ?`, [severity, issueId], function(err) {
+    db.run(`UPDATE issues SET severity = ? WHERE id = ?`, [severity, issueId], function (err) {
         if (err) {
             console.error('Error updating severity:', err.message);
             return res.status(500).send(err.message);
