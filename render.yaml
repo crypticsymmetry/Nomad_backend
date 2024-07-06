@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: powersports-backend
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: DATABASE_URL
+        value: 'file:/var/data/powersports.db'
+    databases:
+      - name: powersports-db
+
+databases:
+  - name: powersports-db
+    plan: free
+    region: oregon
