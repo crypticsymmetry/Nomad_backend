@@ -10,7 +10,6 @@ const port = 3000;
 const upload = multer({ dest: 'images/' });
 
 setupDatabase();
-
 app.use(cors());
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
