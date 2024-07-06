@@ -9,9 +9,23 @@ const app = express();
 const port = 3000;
 const upload = multer({ dest: 'images/' });
 
-// Setup CORS to allow requests from your frontend URL
+// Setup CORS to allow requests from multiple origins
+const allowedOrigins = [
+    'https://nomad-frontend-silk.vercel.app',
+    'https://nomad-frontend-e2accdm96-crypticsymmetrys-projects.vercel.app'
+];
+
 const corsOptions = {
-    origin: 'https://nomad-frontend-silk.vercel.app/*', // Replace with your Vercel frontend URL
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        // Check if the origin matches the allowed pattern
+        if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     optionsSuccessStatus: 200
 };
 
