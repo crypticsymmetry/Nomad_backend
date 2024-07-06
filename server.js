@@ -6,7 +6,7 @@ const fs = require('fs');
 const cors = require('cors'); // Import the CORS middleware
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const upload = multer({ dest: 'images/' });
 
 // Setup CORS to allow requests from multiple origins
@@ -17,9 +17,7 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
-        // Check if the origin matches the allowed pattern
         if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
             callback(null, true);
         } else {
