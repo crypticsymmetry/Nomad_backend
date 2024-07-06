@@ -1,20 +1,20 @@
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
-const databaseDirectory = path.join(__dirname, 'data');
-const databasePath = path.join(databaseDirectory, 'powersports.db');
+const dbDir = '/var/data';
+const dbPath = path.join(dbDir, 'powersports.db');
 
-// Ensure the database directory exists
-if (!fs.existsSync(databaseDirectory)) {
-    fs.mkdirSync(databaseDirectory, { recursive: true });
+// Create the directory if it does not exist
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const db = new sqlite3.Database(databasePath, (err) => {
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
-        console.log('Database connected.');
+        console.log('Connected to the SQLite database.');
     }
 });
 
