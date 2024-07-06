@@ -3,10 +3,19 @@ const multer = require('multer');
 const { db, setupDatabase } = require('./db');
 const path = require('path');
 const fs = require('fs');
+const cors = require('cors'); // Import the CORS middleware
 
 const app = express();
 const port = 3000;
 const upload = multer({ dest: 'images/' });
+
+// Setup CORS to allow requests from your frontend URL
+const corsOptions = {
+    origin: 'https://nomad-frontend-e2accdm96-crypticsymmetrys-projects.vercel.app', // Replace with your Vercel frontend URL
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions)); // Use the CORS middleware with the specified options
 
 setupDatabase();
 
