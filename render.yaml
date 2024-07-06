@@ -7,8 +7,8 @@ services:
     buildCommand: "npm install"
     startCommand: "npm start"
     envVars:
-      - key: DATABASE_PATH
-        value: '/var/data/powersports.db'
+      - key: DB_DIRECTORY
+        value: '/var/data'
     databases:
       - name: powersports-db
 
