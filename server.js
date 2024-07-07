@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const BusBoy = require('busboy');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
@@ -67,33 +68,52 @@ app.delete('/machines/:id', (req, res) => {
 
 
 // Upload machine photo
-app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const file = req.file;
-        if (!file) return res.status(400).send('No file uploaded.');
-
-        const blob = bucket.file(`images/${file.originalname}`);
-        const blobStream = blob.createWriteStream({
-            metadata: { contentType: file.mimetype }
-        });
-
-        blobStream.on('error', err => {
-            console.error('Blob stream error:', err);
-            res.status(500).send('Unable to upload image.');
-        });
-
-        blobStream.on('finish', async () => {
-            const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-            await db.collection('machines').doc(id).update({ photo: publicUrl });
-            res.status(200).send({ photo: publicUrl });
-        });
-
-        blobStream.end(file.buffer);
-    } catch (err) {
-        console.error('Error uploading photo:', err.message);
-        res.status(500).send('Server error.');
+app.post('/machines/:id/photo', (req, res) => {
+    if (req.method !== 'POST') {
+        res.sendStatus(405); // 405 METHOD_NOT_ALLOWED
+        return;
     }
+
+    const busboy = new BusBoy({ headers: req.headers });
+    let storageFilepath;
+    let storageFile;
+
+    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        const fileext = filename.match(/\.[0-9a-z]+$/i)[0];
+        const uniqueFileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileext}`;
+        storageFilepath = `images/${uniqueFileName}`;
+        storageFile = bucket.file(storageFilepath);
+
+        file.pipe(storageFile.createWriteStream({
+            metadata: { contentType: mimetype },
+            gzip: true
+        }));
+    });
+
+    busboy.on('finish', () => {
+        if (!storageFile) {
+            res.status(400).json({ error: 'expected file' }); // 400 BAD_REQUEST
+            return;
+        }
+
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storageFile.name}`;
+
+        db.collection('machines').doc(req.params.id).update({ photo: publicUrl })
+            .then(() => {
+                res.status(201).json({ message: 'Image uploaded successfully', photo: publicUrl }); // 201 CREATED
+            })
+            .catch((err) => {
+                console.error(err);
+                res.status(500).json({ error: err.message }); // 500 INTERNAL_SERVER_ERROR
+            });
+    });
+
+    busboy.on('error', (err) => {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    });
+
+    req.pipe(busboy);
 });
 
 // Timer functions
