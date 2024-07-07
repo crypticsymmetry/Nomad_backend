@@ -1,13 +1,12 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json'); // Ensure this path is correct
+const serviceAccount = require('serviceAccountKey.json'); 
 
 console.log('Initializing Firebase Admin SDK...');
 
 try {
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        storageBucket: "nomadpowersports-84e70.appspot.com" // Replace with your project ID
-    });
+        storageBucket: "nomadpowersports-84e70.appspot.com"
 
     console.log('Firebase Admin SDK initialized successfully.');
 } catch (error) {
