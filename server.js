@@ -73,10 +73,10 @@ app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
         const file = req.file;
 
         if (!file) {
+            console.error('No file uploaded.');
             return res.status(400).send('No file uploaded.');
         }
 
-        // Create a new blob in the bucket and upload the file data
         const blob = bucket.file(`images/${file.originalname}`);
         const blobStream = blob.createWriteStream({
             metadata: {
@@ -90,17 +90,20 @@ app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
         });
 
         blobStream.on('finish', async () => {
-            // The public URL can be used to directly access the file via HTTP.
             const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
 
-            // Update the machine document with the photo URL
-            await db.collection('machines').doc(id).update({ photo: publicUrl });
-            res.status(200).send({ photo: publicUrl });
+            try {
+                await db.collection('machines').doc(id).update({ photo: publicUrl });
+                res.status(200).send({ photo: publicUrl });
+            } catch (err) {
+                console.error('Error updating Firestore:', err);
+                res.status(500).send('Error updating Firestore.');
+            }
         });
 
         blobStream.end(file.buffer);
     } catch (err) {
-        console.error('Error uploading photo:', err.message);
+        console.error('Error uploading photo:', err);
         res.status(500).send('Server error.');
     }
 });
