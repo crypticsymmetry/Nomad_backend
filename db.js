@@ -11,7 +11,11 @@ function setupDatabase() {
             start_time TEXT,
             total_time INTEGER DEFAULT 0,
             photo TEXT,
-            worker_name TEXT
+            worker_name TEXT,
+            inspection_start_time TEXT,
+            inspection_total_time INTEGER DEFAULT 0,
+            servicing_start_time TEXT,
+            servicing_total_time INTEGER DEFAULT 0
         )`);
 
         db.run(`CREATE TABLE IF NOT EXISTS issues (
