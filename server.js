@@ -206,6 +206,7 @@ app.get('/machines/:id', (req, res) => {
     });
 });
 
+
 // Add issue
 app.post('/machines/:id/issues', (req, res) => {
     const { id } = req.params;
