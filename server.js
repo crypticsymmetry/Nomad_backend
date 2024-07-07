@@ -65,6 +65,7 @@ app.delete('/machines/:id', (req, res) => {
     });
 });
 
+
 // Upload machine photo
 app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
     try {
