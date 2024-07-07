@@ -7,7 +7,7 @@ const db = require('./firebaseConfig');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const upload = multer({ dest: 'images/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Setup CORS to allow requests from multiple origins
 const allowedOrigins = [
