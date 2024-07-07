@@ -65,18 +65,30 @@ app.delete('/machines/:id', (req, res) => {
 });
 
 
+
 // Upload machine photo
 app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
-    const { id } = req.params;
-    const photoPath = `/images/${req.file.filename}`;
-    db.collection('machines').doc(id).update({ photo: photoPath })
-    .then(() => {
-        res.status(200).send({ photo: photoPath });
-    })
-    .catch(err => {
-        console.error('Error uploading photo:', err.message);
-        res.status(500).send(err.message);
-    });
+  const { id } = req.params;
+  const file = req.file;
+  const blob = bucket.file(`images/${file.originalname}`);
+  const blobStream = blob.createWriteStream({
+    metadata: {
+      contentType: file.mimetype
+    }
+  });
+
+  blobStream.on('error', err => {
+    console.error('Error uploading photo:', err.message);
+    res.status(500).send(err.message);
+  });
+
+  blobStream.on('finish', async () => {
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+    await db.collection('machines').doc(id).update({ photo: publicUrl });
+    res.status(200).send({ photo: publicUrl });
+  });
+
+  blobStream.end(file.buffer);
 });
 
 // Timer functions
