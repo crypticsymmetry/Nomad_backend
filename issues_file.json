@@ -44,5 +44,9 @@
     "Transfer Case Motor ", "Transfer Case Fluid Flush", "Locking Hub ", "Hub Assembly ", 
     "Wheel Lug Nut ", "Wheel Stud ", "Tire Balance", "Tire Rotation", "Wheel Alignment Check", 
     "Hubcap ", "Wheel Rim ", "Lug Wrench ", "Jack ", "Tire Pressure Sensor ", 
-    "Tire Patch", "Tire Plug", "Tire Sidewall Repair", "Tire Valve Stem ", "Tire Pressure Monitoring System "
+    "Tire Patch", "Tire Plug", "Tire Sidewall Repair", "Tire Valve Stem ", "Tire Pressure Monitoring System ", 
+    "Front Sprocket", "Rear Sprocket", "Chain", "Coolant Burp Tank", "Radiator", "Hydraulic Clutch Assembly",
+    "Chain Guide", "Chassis", "Chain Slider", "Wiring", "Brake Master Cylinder", "Primary Clutch", "Secondary Clutch",
+    "Drive Belt", "Forks", "Spokes", "Stator", "Zerk Fitting", "Trigger Coil", "Windshield", "Accessory Rack", "Cables",
+    "Swing Arm", "Seal/Gasket"
 ]
