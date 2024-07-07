@@ -71,73 +71,73 @@ app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
     });
 });
 
-// Start timer
-app.post('/machines/:id/start', (req, res) => {
+// Timer functions
+const startTimer = (timerType, req, res) => {
     const { id } = req.params;
     const startTime = new Date().toISOString();
-    db.run(`UPDATE machines SET start_time = ?, status = 'Started' WHERE id = ?`, [startTime, id], function (err) {
+    const updateQuery = `UPDATE machines SET ${timerType}_start_time = ?, status = 'Started' WHERE id = ?`;
+    db.run(updateQuery, [startTime, id], function (err) {
         if (err) {
-            console.error('Error starting timer:', err.message);
+            console.error(`Error starting ${timerType} timer:`, err.message);
             return res.status(500).send(err.message);
         }
-        res.status(200).send('Timer started');
+        res.status(200).send(`${timerType.charAt(0).toUpperCase() + timerType.slice(1)} timer started`);
     });
-});
+};
 
-// Pause timer
-app.post('/machines/:id/pause', (req, res) => {
+const pauseTimer = (timerType, req, res) => {
     const { id } = req.params;
-    db.get(`SELECT start_time, total_time FROM machines WHERE id = ?`, [id], (err, row) => {
+    const selectQuery = `SELECT ${timerType}_start_time, ${timerType}_total_time FROM machines WHERE id = ?`;
+    db.get(selectQuery, [id], (err, row) => {
         if (err) {
-            console.error('Error fetching machine data:', err.message);
+            console.error(`Error fetching machine data for ${timerType} timer:`, err.message);
             return res.status(500).send(err.message);
         }
-        const startTime = new Date(row.start_time);
+        const startTime = new Date(row[`${timerType}_start_time`]);
         const elapsed = (new Date() - startTime) / 1000;
-        const newTotalTime = row.total_time + elapsed;
-        db.run(`UPDATE machines SET start_time = NULL, total_time = ?, status = 'Paused' WHERE id = ?`, [newTotalTime, id], function (err) {
+        const newTotalTime = row[`${timerType}_total_time`] + elapsed;
+        const updateQuery = `UPDATE machines SET ${timerType}_start_time = NULL, ${timerType}_total_time = ?, status = 'Paused' WHERE id = ?`;
+        db.run(updateQuery, [newTotalTime, id], function (err) {
             if (err) {
-                console.error('Error pausing timer:', err.message);
+                console.error(`Error pausing ${timerType} timer:`, err.message);
                 return res.status(500).send(err.message);
             }
-            res.status(200).send('Timer paused');
+            res.status(200).send(`${timerType.charAt(0).toUpperCase() + timerType.slice(1)} timer paused`);
         });
     });
-});
+};
 
-// Stop timer
-app.post('/machines/:id/stop', (req, res) => {
+const stopTimer = (timerType, req, res) => {
     const { id } = req.params;
-    db.get(`SELECT start_time, total_time FROM machines WHERE id = ?`, [id], (err, row) => {
+    const selectQuery = `SELECT ${timerType}_start_time, ${timerType}_total_time FROM machines WHERE id = ?`;
+    db.get(selectQuery, [id], (err, row) => {
         if (err) {
-            console.error('Error fetching machine data:', err.message);
+            console.error(`Error fetching machine data for ${timerType} timer:`, err.message);
             return res.status(500).send(err.message);
         }
-        const startTime = new Date(row.start_time);
+        const startTime = new Date(row[`${timerType}_start_time`]);
         const elapsed = (new Date() - startTime) / 1000;
-        const newTotalTime = row.total_time + elapsed;
-        db.run(`UPDATE machines SET start_time = NULL, total_time = ?, status = 'Stopped/Finished' WHERE id = ?`, [newTotalTime, id], function (err) {
+        const newTotalTime = row[`${timerType}_total_time`] + elapsed;
+        const updateQuery = `UPDATE machines SET ${timerType}_start_time = NULL, ${timerType}_total_time = ?, status = 'Stopped/Finished' WHERE id = ?`;
+        db.run(updateQuery, [newTotalTime, id], function (err) {
             if (err) {
-                console.error('Error stopping timer:', err.message);
+                console.error(`Error stopping ${timerType} timer:`, err.message);
                 return res.status(500).send(err.message);
             }
-            res.status(200).send('Timer stopped');
+            res.status(200).send(`${timerType.charAt(0).toUpperCase() + timerType.slice(1)} timer stopped`);
         });
     });
-});
+};
 
-// Update status
-app.put('/machines/:id/status', (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-    db.run(`UPDATE machines SET status = ? WHERE id = ?`, [status, id], function (err) {
-        if (err) {
-            console.error('Error updating status:', err.message);
-            return res.status(500).send(err.message);
-        }
-        res.status(200).send('Status updated');
-    });
-});
+// Inspection timers
+app.post('/machines/:id/inspection/start', (req, res) => startTimer('inspection', req, res));
+app.post('/machines/:id/inspection/pause', (req, res) => pauseTimer('inspection', req, res));
+app.post('/machines/:id/inspection/stop', (req, res) => stopTimer('inspection', req, res));
+
+// Servicing timers
+app.post('/machines/:id/servicing/start', (req, res) => startTimer('servicing', req, res));
+app.post('/machines/:id/servicing/pause', (req, res) => pauseTimer('servicing', req, res));
+app.post('/machines/:id/servicing/stop', (req, res) => stopTimer('servicing', req, res));
 
 // Get all machines
 app.get('/machines', (req, res) => {
@@ -149,6 +149,8 @@ app.get('/machines', (req, res) => {
         res.json(rows.map(row => ({
             ...row,
             total_time: secondsToHMS(row.total_time),
+            inspection_total_time: secondsToHMS(row.inspection_total_time),
+            servicing_total_time: secondsToHMS(row.servicing_total_time)
         })));
     });
 });
@@ -169,6 +171,8 @@ app.get('/machines/:id', (req, res) => {
             res.json({
                 ...row,
                 total_time: secondsToHMS(row.total_time),
+                inspection_total_time: secondsToHMS(row.inspection_total_time),
+                servicing_total_time: secondsToHMS(row.servicing_total_time),
                 issues,
             });
         });
