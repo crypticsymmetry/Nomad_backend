@@ -74,11 +74,11 @@ app.post('/machines/:id/photo', (req, res) => {
         return;
     }
 
-    const busboy = new BusBoy({ headers: req.headers });
+    const bb = busboy({ headers: req.headers });
     let storageFilepath;
     let storageFile;
 
-    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    bb.on('file', (fieldname, file, filename, encoding, mimetype) => {
         const fileext = filename.match(/\.[0-9a-z]+$/i)[0];
         const uniqueFileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileext}`;
         storageFilepath = `images/${uniqueFileName}`;
@@ -90,7 +90,7 @@ app.post('/machines/:id/photo', (req, res) => {
         }));
     });
 
-    busboy.on('finish', () => {
+    bb.on('finish', () => {
         if (!storageFile) {
             res.status(400).json({ error: 'expected file' }); // 400 BAD_REQUEST
             return;
@@ -108,12 +108,12 @@ app.post('/machines/:id/photo', (req, res) => {
             });
     });
 
-    busboy.on('error', (err) => {
+    bb.on('error', (err) => {
         console.error(err);
         res.status(500).json({ error: err.message });
     });
 
-    req.pipe(busboy);
+    req.pipe(bb);
 });
 
 // Timer functions
