@@ -189,7 +189,7 @@ app.get('/machines/:id', (req, res) => {
         .then(snapshot => {
             const issues = [];
             snapshot.forEach(issueDoc => {
-                issues.push(issueDoc.data());
+                issues.push({ id: issueDoc.id, ...issueDoc.data() });
             });
             res.json({
                 ...data,
@@ -210,37 +210,29 @@ app.get('/machines/:id', (req, res) => {
 app.post('/machines/:id/issues', (req, res) => {
     const { id } = req.params;
     const { issue, note, severity } = req.body;
-    const issueData = {
+    db.collection('issues').add({
+        machine_id: id,
         issue,
         status: 'Pending',
         note,
         severity,
         created_at: new Date().toISOString(),
-    };
-    db.collection('machines').doc(id).get()
-        .then(doc => {
-            if (!doc.exists) {
-                res.status(404).send('Machine not found');
-                return;
-            }
-            const machineData = doc.data();
-            const issues = machineData.issues || [];
-            issues.push(issueData);
-            db.collection('machines').doc(id).update({ issues })
-                .then(() => {
-                    res.status(201).json(issues);
-                })
-                .catch(err => {
-                    console.error('Error updating machine with new issue:', err.message);
-                    res.status(500).send(err.message);
-                });
-        })
-        .catch(err => {
-            console.error('Error fetching machine:', err.message);
-            res.status(500).send(err.message);
+    })
+    .then(() => {
+        db.collection('issues').where('machine_id', '==', id).get()
+        .then(snapshot => {
+            const issues = [];
+            snapshot.forEach(issueDoc => {
+                issues.push({ id: issueDoc.id, ...issueDoc.data() });
+            });
+            res.status(201).json(issues);
         });
+    })
+    .catch(err => {
+        console.error('Error adding issue:', err.message);
+        res.status(500).send(err.message);
+    });
 });
-
 
 // Remove issue
 app.delete('/machines/:machineId/issues/:issueId', (req, res) => {
@@ -252,7 +244,7 @@ app.delete('/machines/:machineId/issues/:issueId', (req, res) => {
         .then(snapshot => {
             const issues = [];
             snapshot.forEach(issueDoc => {
-                issues.push(issueDoc.data());
+                issues.push({ id: issueDoc.id, ...issueDoc.data() });
             });
             res.status(200).json(issues);
         });
@@ -274,7 +266,7 @@ app.put('/machines/:machineId/issues/:issueId/note', (req, res) => {
         .then(snapshot => {
             const issues = [];
             snapshot.forEach(issueDoc => {
-                issues.push(issueDoc.data());
+                issues.push({ id: issueDoc.id, ...issueDoc.data() });
             });
             res.status(200).json(issues);
         });
@@ -296,7 +288,7 @@ app.put('/machines/:machineId/issues/:issueId/severity', (req, res) => {
         .then(snapshot => {
             const issues = [];
             snapshot.forEach(issueDoc => {
-                issues.push(issueDoc.data());
+                issues.push({ id: issueDoc.id, ...issueDoc.data() });
             });
             res.status(200).json(issues);
         });
