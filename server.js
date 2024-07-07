@@ -29,7 +29,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/images', express.static(path.join(__dirname, 'images')));
+
 // Add machine
 app.post('/machines', (req, res) => {
     const { name, worker_name } = req.body;
@@ -71,30 +71,20 @@ app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
     try {
         const { id } = req.params;
         const file = req.file;
-
-        if (!file) {
-            console.error('No file uploaded.');
-            return res.status(400).send('No file uploaded.');
-        }
-
-        console.log(`Uploading file: ${file.originalname}, MIME type: ${file.mimetype}`);
+        if (!file) return res.status(400).send('No file uploaded.');
 
         const blob = bucket.file(`images/${file.originalname}`);
         const blobStream = blob.createWriteStream({
-            metadata: {
-                contentType: file.mimetype
-            }
+            metadata: { contentType: file.mimetype }
         });
 
-        blobStream.on('error', (err) => {
+        blobStream.on('error', err => {
             console.error('Blob stream error:', err);
             res.status(500).send('Unable to upload image.');
         });
 
         blobStream.on('finish', async () => {
             const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-            console.log(`File uploaded to: ${publicUrl}`);
-
             await db.collection('machines').doc(id).update({ photo: publicUrl });
             res.status(200).send({ photo: publicUrl });
         });
