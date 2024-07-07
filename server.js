@@ -12,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Setup CORS to allow requests from multiple origins
 const allowedOrigins = [
     'https://nomad-frontend-silk.vercel.app',
-    'https://nomad-frontend-silk.vercel.app/machine'
+    'https://nomad-frontend-silk.vercel.app/machines'
 ];
 
 const corsOptions = {
