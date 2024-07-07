@@ -68,7 +68,7 @@ app.delete('/machines/:id', (req, res) => {
 // Upload machine photo
 app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
     const { id } = req.params;
-    const photoPath = req.file.path;
+    const photoPath = `/images/${req.file.filename}`;
     db.collection('machines').doc(id).update({ photo: photoPath })
     .then(() => {
         res.status(200).send({ photo: photoPath });
@@ -78,6 +78,7 @@ app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
         res.status(500).send(err.message);
     });
 });
+
 
 // Timer functions
 const startTimer = (timerType, req, res) => {
