@@ -73,10 +73,12 @@ app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
         const file = req.file;
 
         if (!file) {
+            console.error('No file uploaded.');
             return res.status(400).send('No file uploaded.');
         }
 
-        // Create a new blob in the bucket and upload the file data
+        console.log(`Uploading file: ${file.originalname}, MIME type: ${file.mimetype}`);
+
         const blob = bucket.file(`images/${file.originalname}`);
         const blobStream = blob.createWriteStream({
             metadata: {
@@ -90,10 +92,9 @@ app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
         });
 
         blobStream.on('finish', async () => {
-            // The public URL can be used to directly access the file via HTTP.
             const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+            console.log(`File uploaded to: ${publicUrl}`);
 
-            // Update the machine document with the photo URL
             await db.collection('machines').doc(id).update({ photo: publicUrl });
             res.status(200).send({ photo: publicUrl });
         });
@@ -104,7 +105,6 @@ app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
         res.status(500).send('Server error.');
     }
 });
-
 
 // Timer functions
 const startTimer = (timerType, req, res) => {
