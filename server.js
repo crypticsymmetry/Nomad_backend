@@ -29,7 +29,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-
+app.use('/images', express.static(path.join(__dirname, 'images')));
 // Add machine
 app.post('/machines', (req, res) => {
     const { name, worker_name } = req.body;
