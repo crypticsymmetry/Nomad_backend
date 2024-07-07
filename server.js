@@ -2,8 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const cors = require('cors'); // Import the CORS middleware
-const db = require('./firebaseConfig'); // Import Firestore
+const cors = require('cors');
+const db = require('./firebaseConfig');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -27,8 +27,7 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
-app.use(cors(corsOptions)); // Use the CORS middleware with the specified options
-
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
