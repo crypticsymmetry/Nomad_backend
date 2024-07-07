@@ -29,7 +29,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Add machine
 app.post('/machines', (req, res) => {
@@ -107,7 +106,6 @@ app.post('/machines/:id/photo', upload.single('photo'), async (req, res) => {
         res.status(500).send('Server error.');
     }
 });
-
 
 // Timer functions
 const startTimer = (timerType, req, res) => {
