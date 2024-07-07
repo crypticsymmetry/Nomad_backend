@@ -68,6 +68,7 @@ app.delete('/machines/:id', (req, res) => {
 
 
 // Upload machine photo
+
 app.post('/machines/:id/photo', (req, res) => {
     if (req.method !== 'POST') {
         res.sendStatus(405); // 405 METHOD_NOT_ALLOWED
@@ -79,6 +80,7 @@ app.post('/machines/:id/photo', (req, res) => {
     let storageFile;
 
     bb.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        console.log(`Received file: ${filename} (${mimetype})`);
         const fileext = filename.match(/\.[0-9a-z]+$/i)[0];
         const uniqueFileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileext}`;
         storageFilepath = `images/${uniqueFileName}`;
@@ -87,6 +89,11 @@ app.post('/machines/:id/photo', (req, res) => {
         file.pipe(storageFile.createWriteStream({
             metadata: { contentType: mimetype },
             gzip: true
+        }).on('error', (err) => {
+            console.error('Blob stream error:', err);
+            res.status(500).send('Unable to upload image.');
+        }).on('finish', () => {
+            console.log('File upload complete');
         }));
     });
 
@@ -97,19 +104,20 @@ app.post('/machines/:id/photo', (req, res) => {
         }
 
         const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storageFile.name}`;
+        console.log(`Public URL: ${publicUrl}`);
 
         db.collection('machines').doc(req.params.id).update({ photo: publicUrl })
             .then(() => {
                 res.status(201).json({ message: 'Image uploaded successfully', photo: publicUrl }); // 201 CREATED
             })
             .catch((err) => {
-                console.error(err);
+                console.error('Firestore update error:', err);
                 res.status(500).json({ error: err.message }); // 500 INTERNAL_SERVER_ERROR
             });
     });
 
     bb.on('error', (err) => {
-        console.error(err);
+        console.error('BusBoy error:', err);
         res.status(500).json({ error: err.message });
     });
 
