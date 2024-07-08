@@ -65,10 +65,6 @@ app.delete('/machines/:id', (req, res) => {
     });
 });
 
-
-
-// Upload machine photo
-
 // Upload machine photo
 app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
     const { id } = req.params;
@@ -326,10 +322,17 @@ app.get('/issues-file', (req, res) => {
             console.error('Error reading issues file:', err.message);
             res.status(500).send('Error reading issues file');
         } else {
-            res.json(JSON.parse(data));
+            try {
+                const issues = JSON.parse(data);
+                res.json(issues);
+            } catch (parseError) {
+                console.error('Error parsing issues file:', parseError.message);
+                res.status(500).send('Error parsing issues file');
+            }
         }
     });
 });
+
 
 function secondsToHMS(seconds) {
     const h = Math.floor(seconds / 3600);
