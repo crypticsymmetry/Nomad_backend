@@ -69,59 +69,32 @@ app.delete('/machines/:id', (req, res) => {
 
 // Upload machine photo
 
-app.post('/machines/:id/photo', (req, res) => {
-    if (req.method !== 'POST') {
-        res.sendStatus(405); // 405 METHOD_NOT_ALLOWED
-        return;
-    }
+// Upload machine photo
+app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
+    const { id } = req.params;
+    const file = req.file;
+    const blob = bucket.file(`machines/${id}/${file.originalname}`);
+    const blobStream = blob.createWriteStream();
 
-    const bb = busboy({ headers: req.headers });
-    let storageFilepath;
-    let storageFile;
-
-    bb.on('file', (fieldname, file, filename, encoding, mimetype) => {
-        console.log(`Received file: ${filename} (${mimetype})`);
-        const fileext = filename.match(/\.[0-9a-z]+$/i)[0];
-        const uniqueFileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileext}`;
-        storageFilepath = `images/${uniqueFileName}`;
-        storageFile = bucket.file(storageFilepath);
-
-        file.pipe(storageFile.createWriteStream({
-            metadata: { contentType: mimetype },
-            gzip: true
-        }).on('error', (err) => {
-            console.error('Blob stream error:', err);
-            res.status(500).send('Unable to upload image.');
-        }).on('finish', () => {
-            console.log('File upload complete');
-        }));
+    blobStream.on('error', err => {
+        console.error('Error uploading photo:', err.message);
+        return res.status(500).send(err.message);
     });
 
-    bb.on('finish', () => {
-        if (!storageFile) {
-            res.status(400).json({ error: 'expected file' }); // 400 BAD_REQUEST
-            return;
-        }
-
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storageFile.name}`;
-        console.log(`Public URL: ${publicUrl}`);
-
-        db.collection('machines').doc(req.params.id).update({ photo: publicUrl })
-            .then(() => {
-                res.status(201).json({ message: 'Image uploaded successfully', photo: publicUrl }); // 201 CREATED
-            })
-            .catch((err) => {
-                console.error('Firestore update error:', err);
-                res.status(500).json({ error: err.message }); // 500 INTERNAL_SERVER_ERROR
+    blobStream.on('finish', async () => {
+        const photoUrl = await blob.getSignedUrl({
+            action: 'read',
+            expires: '03-09-2491'
+        });
+        db.collection('machines').doc(id).update({ photo: photoUrl[0] })
+            .then(() => res.status(200).send({ photo: photoUrl[0] }))
+            .catch(err => {
+                console.error('Error saving photo URL:', err.message);
+                res.status(500).send(err.message);
             });
     });
 
-    bb.on('error', (err) => {
-        console.error('BusBoy error:', err);
-        res.status(500).json({ error: err.message });
-    });
-
-    req.pipe(bb);
+    blobStream.end(file.buffer);
 });
 
 // Timer functions
