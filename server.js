@@ -93,6 +93,34 @@ app.post('/machines/:id/photo', upload.single('photo'), (req, res) => {
     blobStream.end(file.buffer);
 });
 
+// Upload issue photo
+app.post('/machines/:machineId/issues/:issueId/photo', upload.single('photo'), (req, res) => {
+    const { machineId, issueId } = req.params;
+    const file = req.file;
+    const blob = bucket.file(`machines/${machineId}/issues/${issueId}/${file.originalname}`);
+    const blobStream = blob.createWriteStream();
+
+    blobStream.on('error', err => {
+        console.error('Error uploading photo:', err.message);
+        return res.status(500).send(err.message);
+    });
+
+    blobStream.on('finish', async () => {
+        const photoUrl = await blob.getSignedUrl({
+            action: 'read',
+            expires: '03-09-2491'
+        });
+        db.collection('issues').doc(issueId).update({ photo: photoUrl[0] })
+            .then(() => res.status(200).send({ photo: photoUrl[0] }))
+            .catch(err => {
+                console.error('Error saving photo URL:', err.message);
+                res.status(500).send(err.message);
+            });
+    });
+
+    blobStream.end(file.buffer);
+});
+
 // Timer functions
 const startTimer = (timerType, req, res) => {
     const { id } = req.params;
