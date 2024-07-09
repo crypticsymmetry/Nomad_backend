@@ -7,7 +7,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const shipEngineAPIKey = functions.config().shipengine.key;
 
-exports.trackLabel = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+exports.trackLabel = functions.pubsub.schedule('every 6 hours').onRun(async (context) => {
     const issuesSnapshot = await db.collection('issues').where('trackingNumber', '!=', '').get();
 
     issuesSnapshot.forEach(async (doc) => {
